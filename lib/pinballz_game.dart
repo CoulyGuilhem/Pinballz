@@ -11,11 +11,11 @@ import 'components/flipper.dart';
 import 'components/wall_segment.dart';
 
 class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
-  static const double borderThicknessRatio = 0.015; // épaisseur des murs relative
+  static const double borderThicknessRatio = 0.015;
 
   // Flippers
-  late FlipperComponent leftFlipper;   // ROUGE (à gauche)
-  late FlipperComponent rightFlipper;  // BLEU (à droite)
+  late FlipperComponent leftFlipper;
+  late FlipperComponent rightFlipper;
 
   // Géométrie du plateau
   late double playfieldLeft;
@@ -24,7 +24,7 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
   late double playfieldBottom;
   late double wallThickness;
 
-  // Murs inclinés (components)
+  // Pentes
   late WallSegmentComponent leftSlopeWall;
   late WallSegmentComponent rightSlopeWall;
 
@@ -32,17 +32,16 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
   late double flipperLength;
   late double flipperHeight;
 
-  // amplitude d'angle (en radians)
-  final double flipperDownAbs = 0.3; // inclinaison en bas
-  final double flipperUpAbs = 0.3;   // inclinaison en haut
-  final double flipperSpeed = 8.0;   // vitesse de rotation (rad/s)
+  // Angles flippers
+  final double flipperDownAbs = 0.3;
+  final double flipperUpAbs = 0.3;
+  final double flipperSpeed = 8.0;
 
-  // Angles spécifiques pour chaque flip
-  double get leftDownAngle => flipperDownAbs;   // gauche bas = angle positif
-  double get leftUpAngle   => -flipperUpAbs;    // gauche haut = angle négatif
+  double get leftDownAngle => flipperDownAbs;
+  double get leftUpAngle => -flipperUpAbs;
 
-  double get rightDownAngle => -flipperDownAbs; // droite bas = angle négatif
-  double get rightUpAngle   => flipperUpAbs;    // droite haut = angle positif
+  double get rightDownAngle => -flipperDownAbs;
+  double get rightUpAngle => flipperUpAbs;
 
   @override
   Color backgroundColor() => const Color(0xFF050510);
@@ -57,7 +56,7 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
     final w = size.x;
     final h = size.y;
 
-    // ---------- DEBUG ----------
+    // DEBUG dimensions
     add(
       TextComponent(
         text: 'DEBUG: zone Flame = ${w.toStringAsFixed(0)} x ${h.toStringAsFixed(0)}',
@@ -72,7 +71,7 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
       ),
     );
 
-    // ---------- PLATEAU ----------
+    // Plateau
     playfieldTop = 0.0;
     playfieldBottom = h * 0.82;
 
@@ -108,8 +107,8 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
       wallThickness,
     );
 
-    // ---------- MURS INCLINÉS ----------
-    final slopeLength = playfieldWidth * 0.18;
+    // Pentes
+    final slopeLength = playfieldWidth * 0.2;
     const slopeAngle = 0.4;
     const slopeYOffset = 0.0;
 
@@ -137,7 +136,7 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
       rightSlopeEnd: rightSlopeEnd,
     );
 
-    // ---------- FLIPPERS ----------
+    // Flippers
     _createFlippers(
       playfieldWidth: playfieldWidth,
       leftPivot: leftSlopeEnd,
@@ -146,7 +145,6 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
     );
   }
 
-  // ---------- BORDS PRINCIPAUX ----------
   void _createPlayfieldBorders(
       double leftX,
       double rightX,
@@ -208,43 +206,36 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
     );
   }
 
-  // ---------- MURS INCLINÉS ----------
   void _createLowerAreaWalls({
     required Vector2 leftSlopeStart,
     required Vector2 leftSlopeEnd,
     required Vector2 rightSlopeStart,
     required Vector2 rightSlopeEnd,
   }) {
-    // pente gauche : on garde l’ancien comportement
     leftSlopeWall = WallSegmentComponent(
       start: leftSlopeStart,
       end: leftSlopeEnd,
       thickness: wallThickness,
       color: Colors.white,
-      anchor: Anchor.topLeft,   // comme avant
     );
     add(leftSlopeWall);
 
-    // pente droite : on change uniquement l’anchor
     rightSlopeWall = WallSegmentComponent(
       start: rightSlopeStart,
       end: rightSlopeEnd,
       thickness: wallThickness,
       color: Colors.white,
-      anchor: Anchor.bottomLeft, // <<< déplace le mur de l’autre côté du segment
     );
     add(rightSlopeWall);
   }
 
-
-  // ---------- FLIPPERS ----------
   void _createFlippers({
     required double playfieldWidth,
     required Vector2 leftPivot,
     required Vector2 rightPivot,
     required double h,
   }) {
-    flipperLength = playfieldWidth * 0.225;
+    flipperLength = playfieldWidth * 0.25;
     flipperHeight = h * 0.035;
 
     leftFlipper = FlipperComponent(
@@ -286,9 +277,9 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
     );
   }
 
-  // ---------- SPAWN BALL À LA SOURIS ----------
+  // SPAWN BALL à la souris
   void _spawnBall(Vector2 worldPosition) {
-    final double r = size.x * 0.045;
+    final double r = size.x * 0.035;
     final double minX = playfieldLeft + wallThickness + r;
     final double maxX = playfieldRight - wallThickness - r;
     final double minY = playfieldTop + wallThickness + r;
@@ -302,7 +293,6 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
     final ball = Ball(
       position: clamped,
       radius: r,
-      color: Colors.white,
     );
 
     add(ball);
@@ -313,9 +303,9 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
     _spawnBall(event.localPosition);
   }
 
-  // ---------- COLLISIONS SPÉCIALES (PENTES + FLIPS) ----------
+  // COLLISIONS spéciales (pentes + flippers)
   void handleBallExtraCollisions(Ball ball) {
-    // barres inclinées (murs)
+    // pentes
     _collideBallWithSegment(
       ball,
       leftSlopeWall.start,
@@ -327,16 +317,12 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
       rightSlopeWall.end,
     );
 
-    // flippers : segment au milieu du rectangle, avec épaisseur et vitesse angulaire
-    _collideBallWithFlipper(ball, leftFlipper, isLeft: true);
-    _collideBallWithFlipper(ball, rightFlipper, isLeft: false);
+    // flippers
+    _collideBallWithFlipper(ball, leftFlipper);
+    _collideBallWithFlipper(ball, rightFlipper);
   }
 
-  void _collideBallWithFlipper(
-      Ball ball,
-      FlipperComponent flipper, {
-        required bool isLeft,
-      }) {
+  void _collideBallWithFlipper(Ball ball, FlipperComponent flipper) {
     final start = flipper.worldStart;
     final end = flipper.worldEnd;
     final pivot = flipper.position;
@@ -386,43 +372,95 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
       n = delta / dist;
     }
 
-    // vitesse de la surface (flipper en rotation)
+    // vitesse de la surface (flipper)
     Vector2 surfaceVelocity = Vector2.zero();
     if (angularVelocity != null && pivot != null) {
       final rVec = closest - pivot;
-      // v = ω × r (2D : (-ω * r.y, ω * r.x))
       surfaceVelocity = Vector2(
         -angularVelocity * rVec.y,
         angularVelocity * rVec.x,
       );
     }
 
-    // vitesse relative balle/surface
     final vRel = ball.velocity - surfaceVelocity;
     final vn = vRel.dot(n);
 
     if (vn >= 0) return;
 
-    // correction de pénétration
     final overlap = r - dist;
     ball.position += n * overlap;
 
-    const double e = Ball.bounceDamping;
+    const e = Ball.bounceDamping;
 
-    // réflexion de la vitesse relative
     final vRelAfter = vRel - n * ((1 + e) * vn);
 
-    // vitesse finale
     ball.velocity = surfaceVelocity + vRelAfter;
   }
 
-  // ---------- INPUT CLAVIER ----------
+  // 🔄 UPDATE global : on ajoute les collisions bille–bille
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _handleBallBallCollisions();
+  }
+
+  void _handleBallBallCollisions() {
+    final balls = children.whereType<Ball>().toList();
+    final int n = balls.length;
+    if (n < 2) return;
+
+    for (int i = 0; i < n; i++) {
+      for (int j = i + 1; j < n; j++) {
+        _resolveBallCollision(balls[i], balls[j]);
+      }
+    }
+  }
+
+  void _resolveBallCollision(Ball a, Ball b) {
+    final delta = b.position - a.position;
+    final dist2 = delta.length2;
+
+    final double r = a.radius + b.radius;
+    final double r2 = r * r;
+
+    if (dist2 >= r2 || dist2 == 0) {
+      return;
+    }
+
+    final dist = sqrt(dist2);
+    final n = delta / dist;
+
+    // correction de pénétration
+    final overlap = r - dist;
+    final correction = n * (overlap / 2);
+    a.position -= correction;
+    b.position += correction;
+
+    // vitesses relatives
+    final rv = b.velocity - a.velocity;
+    final vn = rv.dot(n);
+
+    if (vn > 0) {
+      return;
+    }
+
+    const e = Ball.bounceDamping;
+
+    // masses égales => impulse simplifié
+    final j = -(1 + e) * vn / 2;
+    final impulse = n * j;
+
+    a.velocity -= impulse;
+    b.velocity += impulse;
+  }
+
+  // INPUT clavier
   @override
   KeyEventResult onKeyEvent(
       KeyEvent event,
       Set<LogicalKeyboardKey> keysPressed,
       ) {
-    // on regarde l'état ACTUEL des touches, pas le type d'event
+    // on lit l'état courant des touches (robuste vs KeyRepeat)
     final isLeftDown =
         keysPressed.contains(LogicalKeyboardKey.arrowLeft) ||
             keysPressed.contains(LogicalKeyboardKey.keyA);
@@ -431,11 +469,9 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
         keysPressed.contains(LogicalKeyboardKey.arrowRight) ||
             keysPressed.contains(LogicalKeyboardKey.keyD);
 
-    // on envoie l'état courant aux flippers
     leftFlipper.setPressed(isLeftDown);
     rightFlipper.setPressed(isRightDown);
 
-    // si l'event concerne une de ces touches, on le "consomme"
     if (event.logicalKey == LogicalKeyboardKey.arrowLeft ||
         event.logicalKey == LogicalKeyboardKey.keyA ||
         event.logicalKey == LogicalKeyboardKey.arrowRight ||

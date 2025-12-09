@@ -20,7 +20,7 @@ class PinballzApp extends StatelessWidget {
           builder: (context, constraints) {
             return Row(
               children: [
-                // ⬅️ UI gauche : 1/4
+                // ⬅️ UI gauche : 1/4 de la largeur
                 Expanded(
                   flex: 1,
                   child: Container(
@@ -51,7 +51,6 @@ class PinballzApp extends StatelessWidget {
                   ),
                 ),
 
-                // 🎮 Jeu Flame au centre : 1/2
                 Expanded(
                   flex: 2,
                   child: Container(
@@ -89,7 +88,7 @@ class PinballzApp extends StatelessWidget {
                   ),
                 ),
 
-                // ➡️ UI droite : 1/4
+                // ➡️ UI droite : 1/4 de la largeur
                 Expanded(
                   flex: 1,
                   child: Container(

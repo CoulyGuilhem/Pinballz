@@ -1,5 +1,4 @@
 import 'package:flame/components.dart';
-import 'package:flutter/material.dart';
 
 enum FlipperState {
   down,
@@ -40,26 +39,28 @@ class FlipperComponent extends SpriteComponent {
   @override
   Future<void> onLoad() async {
     await super.onLoad();
-
-    // Chargement du sprite unique
-    // NOTE : adapte le chemin selon ton asset
+    // ⚠️ adapte le chemin selon ton asset
+    // Par ex: assets/images/left_flipper.png
     sprite = await Sprite.load('left_flip.png');
   }
 
-  /// Input sent by PinballzGame.onKeyEvent
+  /// Appelé par PinballzGame.onKeyEvent
   void setPressed(bool pressed) {
     if (pressed == inputPressed) return;
     inputPressed = pressed;
 
     if (pressed) {
+      // on lance une montée si on était en bas ou en descente
       releaseQueued = false;
       if (state == FlipperState.down || state == FlipperState.goingDown) {
         state = FlipperState.goingUp;
       }
     } else {
+      // relâchement
       if (state == FlipperState.up) {
         state = FlipperState.goingDown;
       } else if (state == FlipperState.goingUp) {
+        // on descendra dès qu'on sera arrivé en haut
         releaseQueued = true;
       }
     }

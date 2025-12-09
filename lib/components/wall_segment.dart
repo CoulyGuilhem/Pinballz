@@ -8,14 +8,12 @@ class WallSegmentComponent extends PositionComponent {
   final Vector2 end;
   final double thickness;
   final Paint paint;
-  final Anchor anchor; // <<< NOUVEAU
 
   WallSegmentComponent({
     required this.start,
     required this.end,
     required this.thickness,
     required Color color,
-    this.anchor = Anchor.topLeft, // <<< par défaut : comme avant
   }) : paint = Paint()..color = color;
 
   @override
@@ -30,7 +28,7 @@ class WallSegmentComponent extends PositionComponent {
       RectangleComponent(
         position: start,
         size: Vector2(length, thickness),
-        anchor: anchor,   // <<< on utilise l’anchor passé
+        anchor: Anchor.topLeft,
         angle: angle,
         paint: paint,
       ),

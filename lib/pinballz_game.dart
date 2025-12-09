@@ -109,7 +109,7 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
     );
 
     // ---------- MURS INCLINÉS ----------
-    final slopeLength = playfieldWidth * 0.2;
+    final slopeLength = playfieldWidth * 0.18;
     const slopeAngle = 0.4;
     const slopeYOffset = 0.0;
 
@@ -244,7 +244,7 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
     required Vector2 rightPivot,
     required double h,
   }) {
-    flipperLength = playfieldWidth * 0.25;
+    flipperLength = playfieldWidth * 0.225;
     flipperHeight = h * 0.035;
 
     leftFlipper = FlipperComponent(
@@ -255,7 +255,6 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
       downAngle: leftDownAngle,
       upAngle: leftUpAngle,
       flipperSpeed: flipperSpeed,
-      color: Colors.redAccent,
     );
     add(leftFlipper);
 
@@ -267,7 +266,6 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
       downAngle: rightDownAngle,
       upAngle: rightUpAngle,
       flipperSpeed: flipperSpeed,
-      color: Colors.blueAccent,
     );
     add(rightFlipper);
 
@@ -290,7 +288,7 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
 
   // ---------- SPAWN BALL À LA SOURIS ----------
   void _spawnBall(Vector2 worldPosition) {
-    final double r = size.x * 0.015;
+    final double r = size.x * 0.045;
     final double minX = playfieldLeft + wallThickness + r;
     final double maxX = playfieldRight - wallThickness - r;
     final double minY = playfieldTop + wallThickness + r;

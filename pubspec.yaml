@@ -21,7 +21,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  #assets:
-   # - assets/images/bullet.png
+  assets:
+    - assets/images/ball.png
+    - assets/images/left_flip.png #TODO Change sprite make top flat
 
 

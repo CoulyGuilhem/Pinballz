@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 
 import 'components/ball.dart';
 import 'components/bumper.dart';
+import 'components/filled_shape.dart';
 import 'components/flipper.dart';
 import 'components/wall_segment.dart';
 
@@ -31,6 +32,9 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
 
   // Bumpers
   final List<BumperComponent> bumpers = [];
+
+  // Formes remplies (obstacles/couloirs style SVG)
+  final List<FilledShapeComponent> filledShapes = [];
 
   // Dimensions flippers
   late double flipperLength;
@@ -149,8 +153,11 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
       h: h,
     );
 
-    // Bumpers (exemples)
+    // Bumpers
     _createBumpers();
+
+    // Formes remplies (2 triangles en haut, creusés vers l'intérieur)
+    _createFilledShapes();
   }
 
   void _createPlayfieldBorders(
@@ -290,7 +297,7 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
   }
 
   void _createBumpers() {
-    // Exemple : 2 bumpers de test
+    // Tu as dit: radius: size.x * 0.08
     final b1 = BumperComponent(
       position: Vector2(size.x * 0.50, size.y * 0.25),
       radius: size.x * 0.08,
@@ -308,6 +315,72 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
     );
     add(b2);
     bumpers.add(b2);
+  }
+
+  void _createFilledShapes() {
+    // Deux triangles dans les 2 angles en haut du plateau.
+    // "Creusé vers l'intérieur" => on courbe un segment en CurveDirection.inward.
+    final border = size.x * 0.02;
+
+    // --- Triangle haut gauche ---
+    final leftPts = <Vector2>[
+      Vector2(size.x * 0.0, size.y * 0.0), // près du coin haut-gauche
+      Vector2(size.x * 0.25, size.y * 0.0), // vers la droite
+      Vector2(size.x * 0.0, size.y * 0.25), // vers le bas
+    ];
+
+    // segments:
+    // 0: p0->p1 (haut) : droit
+    // 1: p1->p2 (diagonale) : creusé inward
+    // 2: p2->p0 (gauche) : droit
+    final leftCurves = <SegmentCurve>[
+      const SegmentCurve(bulgePx: 0),
+      SegmentCurve(
+        bulgePx: size.x * 0.15, // intensité du "creux"
+        direction: CurveDirection.inward,
+        samples: 18,
+      ),
+      const SegmentCurve(bulgePx: 0),
+    ];
+
+    final leftTriangle = FilledShapeComponent(
+      points: leftPts,
+      curves: leftCurves,
+      color: const Color(0xFF2EE6A6),
+      borderThickness: border,
+      restitution: Ball.bounceDamping,
+      debugDrawPolyline: false,
+    );
+    add(leftTriangle);
+    filledShapes.add(leftTriangle);
+
+    // --- Triangle haut droit ---
+    final rightPts = <Vector2>[
+      Vector2(size.x * 1.0, size.y * 0.0), // près du coin haut-droit
+      Vector2(size.x * 0.75, size.y * 0.0), // vers la gauche
+      Vector2(size.x * 1.0, size.y * 0.25), // vers le bas
+    ];
+
+    final rightCurves = <SegmentCurve>[
+      const SegmentCurve(bulgePx: 0),
+      SegmentCurve(
+        bulgePx: size.x * 0.15,
+        direction: CurveDirection.inward,
+        samples: 18,
+      ),
+      const SegmentCurve(bulgePx: 0),
+    ];
+
+    final rightTriangle = FilledShapeComponent(
+      points: rightPts,
+      curves: rightCurves,
+      color: const Color(0xFF2EE6A6),
+      borderThickness: border,
+      restitution: Ball.bounceDamping,
+      debugDrawPolyline: false,
+    );
+    add(rightTriangle);
+    filledShapes.add(rightTriangle);
   }
 
   // SPAWN BALL à la souris
@@ -336,7 +409,7 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
     _spawnBall(event.localPosition);
   }
 
-  // COLLISIONS spéciales (pentes + flippers + bumpers)
+  // COLLISIONS spéciales (pentes + flippers + bumpers + filled shapes)
   void handleBallExtraCollisions(Ball ball) {
     // pentes
     _collideBallWithSegment(
@@ -357,6 +430,11 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
     // bumpers
     for (final bumper in bumpers) {
       bumper.collide(ball);
+    }
+
+    // formes remplies
+    for (final s in filledShapes) {
+      s.collide(ball);
     }
   }
 

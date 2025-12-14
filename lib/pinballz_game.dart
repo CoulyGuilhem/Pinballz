@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'components/ball.dart';
+import 'components/bumper.dart';
 import 'components/flipper.dart';
 import 'components/wall_segment.dart';
 
@@ -27,6 +28,9 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
   // Pentes
   late WallSegmentComponent leftSlopeWall;
   late WallSegmentComponent rightSlopeWall;
+
+  // Bumpers
+  final List<BumperComponent> bumpers = [];
 
   // Dimensions flippers
   late double flipperLength;
@@ -59,7 +63,8 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
     // DEBUG dimensions
     add(
       TextComponent(
-        text: 'DEBUG: zone Flame = ${w.toStringAsFixed(0)} x ${h.toStringAsFixed(0)}',
+        text:
+        'DEBUG: zone Flame = ${w.toStringAsFixed(0)} x ${h.toStringAsFixed(0)}',
         position: Vector2(10, 10),
         priority: 10,
         textRenderer: TextPaint(
@@ -143,6 +148,9 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
       rightPivot: rightSlopeEnd,
       h: h,
     );
+
+    // Bumpers (exemples)
+    _createBumpers();
   }
 
   void _createPlayfieldBorders(
@@ -217,7 +225,7 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
       end: leftSlopeEnd,
       thickness: wallThickness,
       color: Colors.white,
-      anchorPoint: Anchor.topLeft
+      anchorPoint: Anchor.topLeft,
     );
     add(leftSlopeWall);
 
@@ -226,7 +234,7 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
       end: rightSlopeEnd,
       thickness: wallThickness,
       color: Colors.white,
-      anchorPoint: Anchor.bottomLeft
+      anchorPoint: Anchor.bottomLeft,
     );
     add(rightSlopeWall);
   }
@@ -248,7 +256,7 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
       downAngle: leftDownAngle,
       upAngle: leftUpAngle,
       flipperSpeed: flipperSpeed,
-      spriteName: 'left_flip.png'
+      spriteName: 'left_flip.png',
     );
     add(leftFlipper);
 
@@ -260,7 +268,7 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
       downAngle: rightDownAngle,
       upAngle: rightUpAngle,
       flipperSpeed: flipperSpeed,
-      spriteName: 'right_flip.png'
+      spriteName: 'right_flip.png',
     );
     add(rightFlipper);
 
@@ -279,6 +287,27 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
         ),
       ),
     );
+  }
+
+  void _createBumpers() {
+    // Exemple : 2 bumpers de test
+    final b1 = BumperComponent(
+      position: Vector2(size.x * 0.50, size.y * 0.25),
+      radius: size.x * 0.08,
+      kickStrength: 2400,
+      cooldown: 0.06,
+    );
+    add(b1);
+    bumpers.add(b1);
+
+    final b2 = BumperComponent(
+      position: Vector2(size.x * 0.35, size.y * 0.35),
+      radius: size.x * 0.08,
+      kickStrength: 2200,
+      cooldown: 0.06,
+    );
+    add(b2);
+    bumpers.add(b2);
   }
 
   // SPAWN BALL à la souris
@@ -307,7 +336,7 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
     _spawnBall(event.localPosition);
   }
 
-  // COLLISIONS spéciales (pentes + flippers)
+  // COLLISIONS spéciales (pentes + flippers + bumpers)
   void handleBallExtraCollisions(Ball ball) {
     // pentes
     _collideBallWithSegment(
@@ -324,6 +353,11 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
     // flippers
     _collideBallWithFlipper(ball, leftFlipper);
     _collideBallWithFlipper(ball, rightFlipper);
+
+    // bumpers
+    for (final bumper in bumpers) {
+      bumper.collide(ball);
+    }
   }
 
   void _collideBallWithFlipper(Ball ball, FlipperComponent flipper) {
@@ -401,7 +435,7 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
     ball.velocity = surfaceVelocity + vRelAfter;
   }
 
-  // 🔄 UPDATE global : on ajoute les collisions bille–bille
+  // 🔄 UPDATE global : collisions bille–bille
   @override
   void update(double dt) {
     super.update(dt);
@@ -464,14 +498,11 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
       KeyEvent event,
       Set<LogicalKeyboardKey> keysPressed,
       ) {
-    // on lit l'état courant des touches (robuste vs KeyRepeat)
-    final isLeftDown =
-        keysPressed.contains(LogicalKeyboardKey.arrowLeft) ||
-            keysPressed.contains(LogicalKeyboardKey.keyA);
+    final isLeftDown = keysPressed.contains(LogicalKeyboardKey.arrowLeft) ||
+        keysPressed.contains(LogicalKeyboardKey.keyA);
 
-    final isRightDown =
-        keysPressed.contains(LogicalKeyboardKey.arrowRight) ||
-            keysPressed.contains(LogicalKeyboardKey.keyD);
+    final isRightDown = keysPressed.contains(LogicalKeyboardKey.arrowRight) ||
+        keysPressed.contains(LogicalKeyboardKey.keyD);
 
     leftFlipper.setPressed(isLeftDown);
     rightFlipper.setPressed(isRightDown);

@@ -217,6 +217,7 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
       end: leftSlopeEnd,
       thickness: wallThickness,
       color: Colors.white,
+      anchorPoint: Anchor.topLeft
     );
     add(leftSlopeWall);
 
@@ -225,6 +226,7 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
       end: rightSlopeEnd,
       thickness: wallThickness,
       color: Colors.white,
+      anchorPoint: Anchor.bottomLeft
     );
     add(rightSlopeWall);
   }
@@ -246,6 +248,7 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
       downAngle: leftDownAngle,
       upAngle: leftUpAngle,
       flipperSpeed: flipperSpeed,
+      spriteName: 'left_flip.png'
     );
     add(leftFlipper);
 
@@ -257,6 +260,7 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
       downAngle: rightDownAngle,
       upAngle: rightUpAngle,
       flipperSpeed: flipperSpeed,
+      spriteName: 'right_flip.png'
     );
     add(rightFlipper);
 

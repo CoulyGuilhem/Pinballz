@@ -24,5 +24,6 @@ flutter:
   assets:
     - assets/images/ball.png
     - assets/images/left_flip.png #TODO Change sprite make top flat
+    - assets/images/right_flip.png
 
 

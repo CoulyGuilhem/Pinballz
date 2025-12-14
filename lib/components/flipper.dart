@@ -13,7 +13,8 @@ class FlipperComponent extends SpriteComponent {
   final double flipperHeight;
   final double downAngle;
   final double upAngle;
-  final double flipperSpeed; // rad/s
+  final double flipperSpeed;
+  final String spriteName;
 
   double angularVelocity = 0.0;
 
@@ -29,6 +30,7 @@ class FlipperComponent extends SpriteComponent {
     required this.downAngle,
     required this.upAngle,
     required this.flipperSpeed,
+    required this.spriteName
   }) : super(
     position: pivot,
     size: Vector2(flipperLength, flipperHeight),
@@ -41,7 +43,7 @@ class FlipperComponent extends SpriteComponent {
     await super.onLoad();
     // ⚠️ adapte le chemin selon ton asset
     // Par ex: assets/images/left_flipper.png
-    sprite = await Sprite.load('left_flip.png');
+    sprite = await Sprite.load(spriteName);
   }
 
   /// Appelé par PinballzGame.onKeyEvent

@@ -11,36 +11,29 @@ import 'components/bumper.dart';
 import 'components/filled_shape.dart';
 import 'components/flipper.dart';
 import 'components/wall_segment.dart';
+import 'physics/collision_utils.dart';
 
 class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
   static const double borderThicknessRatio = 0.015;
 
-  // Flippers
   late FlipperComponent leftFlipper;
   late FlipperComponent rightFlipper;
 
-  // Géométrie du plateau
   late double playfieldLeft;
   late double playfieldRight;
   late double playfieldTop;
   late double playfieldBottom;
   late double wallThickness;
 
-  // Pentes
   late WallSegmentComponent leftSlopeWall;
   late WallSegmentComponent rightSlopeWall;
 
-  // Bumpers
   final List<BumperComponent> bumpers = [];
-
-  // Formes remplies (obstacles/couloirs style SVG)
   final List<FilledShapeComponent> filledShapes = [];
 
-  // Dimensions flippers
   late double flipperLength;
   late double flipperHeight;
 
-  // Angles flippers
   final double flipperDownAbs = 0.3;
   final double flipperUpAbs = 0.3;
   final double flipperSpeed = 8.0;
@@ -64,23 +57,17 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
     final w = size.x;
     final h = size.y;
 
-    // DEBUG dimensions
     add(
       TextComponent(
-        text:
-        'DEBUG: zone Flame = ${w.toStringAsFixed(0)} x ${h.toStringAsFixed(0)}',
+        text: 'DEBUG: zone Flame = ${w.toStringAsFixed(0)} x ${h.toStringAsFixed(0)}',
         position: Vector2(10, 10),
         priority: 10,
         textRenderer: TextPaint(
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-          ),
+          style: const TextStyle(color: Colors.white, fontSize: 14),
         ),
       ),
     );
 
-    // Plateau
     playfieldTop = 0.0;
     playfieldBottom = h * 0.82;
 
@@ -90,53 +77,25 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
 
     wallThickness = playfieldWidth * borderThicknessRatio;
 
-    add(
-      TextComponent(
-        text: 'CENTER',
-        position: Vector2(
-          (playfieldLeft + playfieldRight) / 2,
-          (playfieldTop + playfieldBottom) / 2,
-        ),
-        anchor: Anchor.center,
-        priority: 10,
-        textRenderer: TextPaint(
-          style: const TextStyle(
-            color: Colors.pinkAccent,
-            fontSize: 10,
-          ),
-        ),
-      ),
-    );
-
-    _createPlayfieldBorders(
-      playfieldLeft,
-      playfieldRight,
-      playfieldTop,
-      playfieldBottom,
-      wallThickness,
-    );
+    _createPlayfieldBorders(playfieldLeft, playfieldRight, playfieldTop, playfieldBottom, wallThickness);
 
     // Pentes
     final slopeLength = playfieldWidth * 0.2;
     const slopeAngle = 0.4;
-    const slopeYOffset = 0.0;
-
-    final slopeY = playfieldBottom - slopeYOffset;
+    final slopeY = playfieldBottom;
 
     final leftSlopeStart = Vector2(playfieldLeft + wallThickness, slopeY);
     final rightSlopeStart = Vector2(playfieldRight - wallThickness, slopeY);
 
-    final leftSlopeEnd = leftSlopeStart +
-        Vector2(
-          slopeLength * cos(slopeAngle),
-          slopeLength * sin(slopeAngle),
-        );
+    final leftSlopeEnd = leftSlopeStart + Vector2(
+      slopeLength * cos(slopeAngle),
+      slopeLength * sin(slopeAngle),
+    );
 
-    final rightSlopeEnd = rightSlopeStart +
-        Vector2(
-          slopeLength * cos(pi - slopeAngle),
-          slopeLength * sin(pi - slopeAngle),
-        );
+    final rightSlopeEnd = rightSlopeStart + Vector2(
+      slopeLength * cos(pi - slopeAngle),
+      slopeLength * sin(pi - slopeAngle),
+    );
 
     _createLowerAreaWalls(
       leftSlopeStart: leftSlopeStart,
@@ -153,72 +112,36 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
       h: h,
     );
 
-    // Bumpers
     _createBumpers();
-
-    // Formes remplies (2 triangles en haut, creusés vers l'intérieur)
     _createFilledShapes();
   }
 
-  void _createPlayfieldBorders(
-      double leftX,
-      double rightX,
-      double topY,
-      double bottomY,
-      double wallThickness,
-      ) {
+  void _createPlayfieldBorders(double leftX, double rightX, double topY, double bottomY, double wallThickness) {
     final wallPaint = Paint()..color = Colors.blueGrey;
 
-    // haut
-    add(
-      RectangleComponent(
-        position: Vector2(leftX, topY),
-        size: Vector2(rightX - leftX, wallThickness),
-        paint: wallPaint,
-      ),
-    );
+    add(RectangleComponent(
+      position: Vector2(leftX, topY),
+      size: Vector2(rightX - leftX, wallThickness),
+      paint: wallPaint,
+    ));
 
-    // gauche
-    add(
-      RectangleComponent(
-        position: Vector2(leftX, topY),
-        size: Vector2(wallThickness, bottomY - topY),
-        paint: wallPaint,
-      ),
-    );
+    add(RectangleComponent(
+      position: Vector2(leftX, topY),
+      size: Vector2(wallThickness, bottomY - topY),
+      paint: wallPaint,
+    ));
 
-    // droite
-    add(
-      RectangleComponent(
-        position: Vector2(rightX - wallThickness, topY),
-        size: Vector2(wallThickness, bottomY - topY),
-        paint: wallPaint,
-      ),
-    );
+    add(RectangleComponent(
+      position: Vector2(rightX - wallThickness, topY),
+      size: Vector2(wallThickness, bottomY - topY),
+      paint: wallPaint,
+    ));
 
-    // ligne de debug bas plateau
-    add(
-      RectangleComponent(
-        position: Vector2(leftX, bottomY),
-        size: Vector2(rightX - leftX, 1),
-        paint: Paint()..color = Colors.greenAccent.withOpacity(0.5),
-      ),
-    );
-
-    add(
-      TextComponent(
-        text:
-        'DEBUG: plateau ${(rightX - leftX).toStringAsFixed(0)} x ${(bottomY - topY).toStringAsFixed(0)}',
-        position: Vector2(leftX + 8, topY + 20),
-        priority: 10,
-        textRenderer: TextPaint(
-          style: const TextStyle(
-            color: Colors.white54,
-            fontSize: 10,
-          ),
-        ),
-      ),
-    );
+    add(RectangleComponent(
+      position: Vector2(leftX, bottomY),
+      size: Vector2(rightX - leftX, 1),
+      paint: Paint()..color = Colors.greenAccent.withOpacity(0.5),
+    ));
   }
 
   void _createLowerAreaWalls({
@@ -278,26 +201,9 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
       spriteName: 'right_flip.png',
     );
     add(rightFlipper);
-
-    final centerX = (leftPivot.x + rightPivot.x) / 2;
-    add(
-      TextComponent(
-        text: 'DEBUG: flippers rectangles alignés',
-        position: Vector2(centerX, h - 20),
-        anchor: Anchor.center,
-        priority: 10,
-        textRenderer: TextPaint(
-          style: const TextStyle(
-            color: Colors.white54,
-            fontSize: 10,
-          ),
-        ),
-      ),
-    );
   }
 
   void _createBumpers() {
-    // Tu as dit: radius: size.x * 0.08
     final b1 = BumperComponent(
       position: Vector2(size.x * 0.50, size.y * 0.25),
       radius: size.x * 0.08,
@@ -318,28 +224,17 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
   }
 
   void _createFilledShapes() {
-    // Deux triangles dans les 2 angles en haut du plateau.
-    // "Creusé vers l'intérieur" => on courbe un segment en CurveDirection.inward.
     final border = size.x * 0.02;
 
-    // --- Triangle haut gauche ---
     final leftPts = <Vector2>[
-      Vector2(size.x * 0.0, size.y * 0.0), // près du coin haut-gauche
-      Vector2(size.x * 0.25, size.y * 0.0), // vers la droite
-      Vector2(size.x * 0.0, size.y * 0.25), // vers le bas
+      Vector2(size.x * 0.0, size.y * 0.0),
+      Vector2(size.x * 0.25, size.y * 0.0),
+      Vector2(size.x * 0.0, size.y * 0.25),
     ];
 
-    // segments:
-    // 0: p0->p1 (haut) : droit
-    // 1: p1->p2 (diagonale) : creusé inward
-    // 2: p2->p0 (gauche) : droit
     final leftCurves = <SegmentCurve>[
       const SegmentCurve(bulgePx: 0),
-      SegmentCurve(
-        bulgePx: size.x * 0.15, // intensité du "creux"
-        direction: CurveDirection.inward,
-        samples: 18,
-      ),
+      SegmentCurve(bulgePx: size.x * 0.15, direction: CurveDirection.inward, samples: 18),
       const SegmentCurve(bulgePx: 0),
     ];
 
@@ -354,20 +249,15 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
     add(leftTriangle);
     filledShapes.add(leftTriangle);
 
-    // --- Triangle haut droit ---
     final rightPts = <Vector2>[
-      Vector2(size.x * 1.0, size.y * 0.0), // près du coin haut-droit
-      Vector2(size.x * 0.75, size.y * 0.0), // vers la gauche
-      Vector2(size.x * 1.0, size.y * 0.25), // vers le bas
+      Vector2(size.x * 1.0, size.y * 0.0),
+      Vector2(size.x * 0.75, size.y * 0.0),
+      Vector2(size.x * 1.0, size.y * 0.25),
     ];
 
     final rightCurves = <SegmentCurve>[
       const SegmentCurve(bulgePx: 0),
-      SegmentCurve(
-        bulgePx: size.x * 0.15,
-        direction: CurveDirection.inward,
-        samples: 18,
-      ),
+      SegmentCurve(bulgePx: size.x * 0.15, direction: CurveDirection.inward, samples: 18),
       const SegmentCurve(bulgePx: 0),
     ];
 
@@ -383,7 +273,6 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
     filledShapes.add(rightTriangle);
   }
 
-  // SPAWN BALL à la souris
   void _spawnBall(Vector2 worldPosition) {
     final double r = size.x * 0.035;
     final double minX = playfieldLeft + wallThickness + r;
@@ -396,191 +285,48 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
       worldPosition.y.clamp(minY, maxY),
     );
 
-    final ball = Ball(
-      position: clamped,
-      radius: r,
-    );
-
-    add(ball);
+    add(Ball(position: clamped, radius: r));
   }
 
   @override
-  void onTapDown(TapDownEvent event) {
-    _spawnBall(event.localPosition);
-  }
+  void onTapDown(TapDownEvent event) => _spawnBall(event.localPosition);
 
-  // COLLISIONS spéciales (pentes + flippers + bumpers + filled shapes)
+  /// Le Game ne fait plus les maths : il délègue aux composants.
   void handleBallExtraCollisions(Ball ball) {
-    // pentes
-    _collideBallWithSegment(
-      ball,
-      leftSlopeWall.start,
-      leftSlopeWall.end,
-    );
-    _collideBallWithSegment(
-      ball,
-      rightSlopeWall.start,
-      rightSlopeWall.end,
-    );
+    leftSlopeWall.collide(ball);
+    rightSlopeWall.collide(ball);
 
-    // flippers
-    _collideBallWithFlipper(ball, leftFlipper);
-    _collideBallWithFlipper(ball, rightFlipper);
+    leftFlipper.collide(ball);
+    rightFlipper.collide(ball);
 
-    // bumpers
     for (final bumper in bumpers) {
       bumper.collide(ball);
     }
-
-    // formes remplies
-    for (final s in filledShapes) {
-      s.collide(ball);
+    for (final shape in filledShapes) {
+      shape.collide(ball);
     }
   }
 
-  void _collideBallWithFlipper(Ball ball, FlipperComponent flipper) {
-    final start = flipper.worldStart;
-    final end = flipper.worldEnd;
-    final pivot = flipper.position;
-
-    _collideBallWithSegment(
-      ball,
-      start,
-      end,
-      extraRadius: flipper.flipperHeight / 2,
-      angularVelocity: flipper.angularVelocity,
-      pivot: pivot,
-    );
-  }
-
-  void _collideBallWithSegment(
-      Ball ball,
-      Vector2 a,
-      Vector2 b, {
-        double extraRadius = 0,
-        double? angularVelocity,
-        Vector2? pivot,
-      }) {
-    final ab = b - a;
-    final abLen2 = ab.length2;
-    if (abLen2 == 0) return;
-
-    final ap = ball.position - a;
-    double t = ap.dot(ab) / abLen2;
-    t = t.clamp(0.0, 1.0);
-
-    final closest = a + ab * t;
-    final delta = ball.position - closest;
-    final dist2 = delta.length2;
-
-    final r = ball.radius + extraRadius;
-    final r2 = r * r;
-
-    if (dist2 >= r2) return;
-
-    double dist = sqrt(dist2);
-    Vector2 n;
-
-    if (dist == 0) {
-      n = Vector2(-ab.y, ab.x).normalized();
-      dist = r;
-    } else {
-      n = delta / dist;
-    }
-
-    // vitesse de la surface (flipper)
-    Vector2 surfaceVelocity = Vector2.zero();
-    if (angularVelocity != null && pivot != null) {
-      final rVec = closest - pivot;
-      surfaceVelocity = Vector2(
-        -angularVelocity * rVec.y,
-        angularVelocity * rVec.x,
-      );
-    }
-
-    final vRel = ball.velocity - surfaceVelocity;
-    final vn = vRel.dot(n);
-
-    if (vn >= 0) return;
-
-    final overlap = r - dist;
-    ball.position += n * overlap;
-
-    const e = Ball.bounceDamping;
-
-    final vRelAfter = vRel - n * ((1 + e) * vn);
-
-    ball.velocity = surfaceVelocity + vRelAfter;
-  }
-
-  // 🔄 UPDATE global : collisions bille–bille
   @override
   void update(double dt) {
     super.update(dt);
-    _handleBallBallCollisions();
-  }
 
-  void _handleBallBallCollisions() {
+    // Collisions bille-bille déplacées dans l'utilitaire
     final balls = children.whereType<Ball>().toList();
-    final int n = balls.length;
-    if (n < 2) return;
-
-    for (int i = 0; i < n; i++) {
-      for (int j = i + 1; j < n; j++) {
-        _resolveBallCollision(balls[i], balls[j]);
+    for (int i = 0; i < balls.length; i++) {
+      for (int j = i + 1; j < balls.length; j++) {
+        CollisionUtils.collideBallWithBall(balls[i], balls[j]);
       }
     }
   }
 
-  void _resolveBallCollision(Ball a, Ball b) {
-    final delta = b.position - a.position;
-    final dist2 = delta.length2;
-
-    final double r = a.radius + b.radius;
-    final double r2 = r * r;
-
-    if (dist2 >= r2 || dist2 == 0) {
-      return;
-    }
-
-    final dist = sqrt(dist2);
-    final n = delta / dist;
-
-    // correction de pénétration
-    final overlap = r - dist;
-    final correction = n * (overlap / 2);
-    a.position -= correction;
-    b.position += correction;
-
-    // vitesses relatives
-    final rv = b.velocity - a.velocity;
-    final vn = rv.dot(n);
-
-    if (vn > 0) {
-      return;
-    }
-
-    const e = Ball.bounceDamping;
-
-    // masses égales => impulse simplifié
-    final j = -(1 + e) * vn / 2;
-    final impulse = n * j;
-
-    a.velocity -= impulse;
-    b.velocity += impulse;
-  }
-
-  // INPUT clavier
   @override
-  KeyEventResult onKeyEvent(
-      KeyEvent event,
-      Set<LogicalKeyboardKey> keysPressed,
-      ) {
-    final isLeftDown = keysPressed.contains(LogicalKeyboardKey.arrowLeft) ||
-        keysPressed.contains(LogicalKeyboardKey.keyA);
+  KeyEventResult onKeyEvent(KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
+    final isLeftDown =
+        keysPressed.contains(LogicalKeyboardKey.arrowLeft) || keysPressed.contains(LogicalKeyboardKey.keyA);
 
-    final isRightDown = keysPressed.contains(LogicalKeyboardKey.arrowRight) ||
-        keysPressed.contains(LogicalKeyboardKey.keyD);
+    final isRightDown =
+        keysPressed.contains(LogicalKeyboardKey.arrowRight) || keysPressed.contains(LogicalKeyboardKey.keyD);
 
     leftFlipper.setPressed(isLeftDown);
     rightFlipper.setPressed(isRightDown);
@@ -591,7 +337,6 @@ class PinballzGame extends FlameGame with KeyboardEvents, TapCallbacks {
         event.logicalKey == LogicalKeyboardKey.keyD) {
       return KeyEventResult.handled;
     }
-
     return KeyEventResult.ignored;
   }
 }

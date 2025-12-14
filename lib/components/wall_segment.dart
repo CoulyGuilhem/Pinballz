@@ -3,6 +3,9 @@ import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
+import '../physics/collision_utils.dart';
+import 'ball.dart';
+
 class WallSegmentComponent extends PositionComponent {
   final Vector2 start;
   final Vector2 end;
@@ -34,6 +37,16 @@ class WallSegmentComponent extends PositionComponent {
         angle: angle,
         paint: paint,
       ),
+    );
+  }
+
+  void collide(Ball ball) {
+    CollisionUtils.collideBallWithSegment(
+      ball,
+      start,
+      end,
+      extraRadius: thickness / 2,
+      restitution: Ball.bounceDamping,
     );
   }
 }
